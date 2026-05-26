@@ -1,11 +1,27 @@
-const PEOPLE = [
+const TEAM_MEMBERS = [
   {
     key: 'steve',
     displayName: 'Steve Astin',
     githubLogin: 'Sastin1',
     repos: [
+      // Framework + this dashboard
       { owner: 'limocity', repo: 'limocity-wat-backup' },
       { owner: 'limocity', repo: 'github-dashboard' },
+      // Apps (added 2026-05-26 — see Dashboards and UI wiki for full inventory)
+      { owner: 'limocity', repo: 'master-hub-v2' },
+      { owner: 'limocity', repo: 'eval-dashboard' },
+      { owner: 'limocity', repo: 'fleet-manager' },
+      { owner: 'limocity', repo: 'kb-manager' },
+      { owner: 'limocity', repo: 'ads-audit-dashboard' },
+      { owner: 'limocity', repo: 'james-email-relay' },
+      { owner: 'limocity', repo: 'affiliate-review' },
+      { owner: 'limocity', repo: 'email-preview' },
+      // Doc-only pages (low commit volume but still counted)
+      { owner: 'limocity', repo: 'architecture-viz' },
+      { owner: 'limocity', repo: 'winston-master-doc' },
+      { owner: 'limocity', repo: 'winston-voice-doc' },
+      { owner: 'limocity', repo: 'james-handoff' },
+      { owner: 'limocity', repo: 'quote-algorithm' },
     ],
   },
   {
@@ -20,7 +36,7 @@ const PEOPLE = [
 
 // Repos where both Steve and Thomas contribute — split commits by authorLogin
 const SHARED_REPOS = [
-  { owner: 'thomaslc214', repo: 'pay-limocity', defaultOwner: 'thomas' },
+  { owner: 'limocity', repo: 'pay-limocity', defaultOwner: 'thomas' },
 ];
 
 // --- Categorization ---
@@ -354,7 +370,7 @@ export default async function handler(req, res) {
 
     const results = {};
 
-    for (const person of PEOPLE) {
+    for (const person of TEAM_MEMBERS) {
       // Fetch all repos for this person in parallel
       const repoResults = await Promise.all(
         person.repos.map(r => fetchAllCommits(token, r.owner, r.repo).then(nodes => ({ nodes, repo: r })))
@@ -374,7 +390,7 @@ export default async function handler(req, res) {
       }
 
       // Inject shared-repo commits that belong to this person (by authorLogin)
-      const knownLogins = new Set(PEOPLE.map(p => p.githubLogin).filter(Boolean));
+      const knownLogins = new Set(TEAM_MEMBERS.map(p => p.githubLogin).filter(Boolean));
       for (const n of sharedNodes) {
         if (seen.has(n.oid)) continue;
         const login = n.author.user?.login || null;
