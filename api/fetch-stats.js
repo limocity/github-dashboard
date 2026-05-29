@@ -16,6 +16,10 @@ const TEAM_MEMBERS = [
       { owner: 'limocity', repo: 'james-email-relay' },
       { owner: 'limocity', repo: 'affiliate-review' },
       { owner: 'limocity', repo: 'email-preview' },
+      // Added 2026-05-28 — Communication Center (renamed from limocity-ops same day,
+      // so the GitHub repo URL is communication-center). Was missing from this list
+      // and 46+ commits of Steve's last-2-day work were invisible to the dashboard.
+      { owner: 'limocity', repo: 'communication-center' },
       // Doc-only pages (low commit volume but still counted)
       { owner: 'limocity', repo: 'architecture-viz' },
       { owner: 'limocity', repo: 'winston-master-doc' },
@@ -65,6 +69,9 @@ function categorizeCommit(message) {
 function getProject(message) {
   const msg = message.toLowerCase();
   // Order matters — more specific matches first
+  // Communication Center first — its messages mention winston/james/alex/voice/sms/email and
+  // would otherwise be miscategorized into Winston / James / Telephony buckets.
+  if (/communication.center|limocity.ops|convo.row|inbox.*(row|tab|filter|pane)|cust.replied|right.rail|drill.page|cadence.position|sparkline|right.rail|agent.avatar/.test(msg)) return 'Communication Center';
   // Fleet Manager & Quote Engine before James/Winston (they'd otherwise fall to Other)
   if (/fleet.manager|rating.manager|vehicle.*(inventory|photo)|photo.status|sedan.*limo|cost.*retail.*margin/.test(msg)) return 'Fleet Manager';
   if (/generate.quote|quote.algorithm|quote.*v\d|selection.logic|pax.*(floor|fallback)|hero.*hierarchy|photo.gate|variety.enforcement|affordable.mix|party.bus.split|prom.*section|vehicle.*color.*feature/.test(msg)) return 'Quote Engine';
