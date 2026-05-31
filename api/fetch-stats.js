@@ -20,6 +20,9 @@ const TEAM_MEMBERS = [
       // so the GitHub repo URL is communication-center). Was missing from this list
       // and 46+ commits of Steve's last-2-day work were invisible to the dashboard.
       { owner: 'limocity', repo: 'communication-center' },
+      // Added 2026-05-31 (cont.32) — Twilio Media Streams <-> ElevenLabs bridge for the
+      // Winston no-answer reclaim (interactive real-voice). Deployed to Fly.io.
+      { owner: 'limocity', repo: 'winston-voice-bridge' },
       // Doc-only pages (low commit volume but still counted)
       { owner: 'limocity', repo: 'architecture-viz' },
       { owner: 'limocity', repo: 'winston-master-doc' },
