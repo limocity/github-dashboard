@@ -73,7 +73,38 @@ function categorizeCommit(message) {
   return 'other';
 }
 
-function getProject(message) {
+// Catch-all repos that hold many initiatives at once (a person's framework/backup repo);
+// for these the commit MESSAGE is the only initiative signal, not the repo.
+const CATCH_ALL_REPOS = ['wat-backup', 'winston-ai-limo-assistant'];
+
+// The source REPO is the most reliable initiative signal for dedicated repos — far better
+// than regexing the commit message. Returns a project label or null (fall through to msg).
+function projectFromRepo(repo) {
+  const r = (repo || '').toLowerCase();
+  if (!r || CATCH_ALL_REPOS.some(x => r.includes(x))) return null;
+  if (r.includes('winston-voice')) return 'Winston Voice';
+  if (r.includes('winston-master')) return 'Winston SOT';
+  if (r.includes('communication-center') || r.includes('email-preview')) return 'Communication Center';
+  if (r.includes('pay-limocity') || r.includes('affiliate-review')) return 'Payments / Checkout';
+  if (r.includes('james')) return 'James';
+  if (r.includes('fleet-manager')) return 'Fleet Manager';
+  if (r.includes('quote-algorithm')) return 'Quote Engine';
+  if (r.includes('eval-dashboard')) return 'Eval / Measurement';
+  if (r.includes('kb-manager')) return 'Knowledge Base';
+  if (r.includes('ads-audit')) return 'Marketing / Ads';
+  if (r.includes('limocity-crons')) return 'n8n / Automation';
+  if (r.includes('github-dashboard') || r.includes('master-hub')) return 'Dashboards / Tools';
+  if (r.includes('architecture-viz') || r.endsWith('-doc')) return 'Docs / Admin';
+  return null; // unmapped dedicated repo → fall through to message-based detection
+}
+
+function getProject(message, repo) {
+  // 1) Repo wins for dedicated repos (most reliable).
+  const byRepo = projectFromRepo(repo);
+  if (byRepo) return byRepo;
+
+  // 2) Catch-all repos (backup / Thomas's main repo) + unmapped repos: use the message.
+  const isCatchAll = CATCH_ALL_REPOS.some(x => (repo || '').toLowerCase().includes(x));
   const msg = message.toLowerCase();
   // Order matters — more specific matches first
   // Communication Center first — its messages mention winston/james/alex/voice/sms/email and
@@ -82,8 +113,12 @@ function getProject(message) {
   // Fleet Manager & Quote Engine before James/Winston (they'd otherwise fall to Other)
   if (/fleet.manager|rating.manager|vehicle.*(inventory|photo)|photo.status|sedan.*limo|cost.*retail.*margin/.test(msg)) return 'Fleet Manager';
   if (/generate.quote|quote.algorithm|quote.*v\d|selection.logic|pax.*(floor|fallback)|hero.*hierarchy|photo.gate|variety.enforcement|affordable.mix|party.bus.split|prom.*section|vehicle.*color.*feature/.test(msg)) return 'Quote Engine';
-  if (/james|handoff|fulfillment|checkout|reservation|payment.?link|pay-limocity/.test(msg)) return 'James';
-  if (/elevenlabs|voice.*(agent|tool|router|prompt|tracking|call)|voice_calls|post.call.handler/.test(msg)) return 'Winston Voice';
+  // Payments / Checkout — split out from James (the Stripe/checkout/deposit/vault work is its
+  // own initiative; James = the post-sale AGENT). Check payments BEFORE James.
+  if (/payment|checkout|stripe|deposit|pay.?link|pay-limocity|card.?vault|\bcvc\b|affiliate.?send|\bpan\b|saq|pci/.test(msg)) return 'Payments / Checkout';
+  if (/\bjames\b|post.?sale|fulfillment|handoff/.test(msg)) return 'James';
+  // Winston Voice — broadened to catch the warm-transfer/reclaim/bridge/media-stream work.
+  if (/elevenlabs|winston.?voice|voice.*(agent|tool|router|prompt|tracking|call|bridge|reclaim|transfer)|voice_calls|post.call.handler|media.?stream|warm.?transfer|reclaim|whisper|take.?message/.test(msg)) return 'Winston Voice';
   if (/winston.*(sot|source of truth|system prompt|persona|coaching|instruction|guardrail|governance)/.test(msg)) return 'Winston SOT';
   if (/winston|bug\s*\d+|e2e test|verification.*checklist|round\s*\d+/.test(msg)) return 'Winston Thomas';
   if (/seo|json.ld|schema.*page|\bfaq\b|suburb|meta.title|breadcrumb|divi|wordpress|wp_|wpcode|yoast|page.*builder|wp.rocket|\bcta\b|hero.*section/.test(msg)) return 'Website / SEO';
@@ -97,7 +132,9 @@ function getProject(message) {
   if (/doc sweep|session log|worklog|briefing|update docs|session \d{4}|system map|cleanup|stale|design doc|onboarding.*guide|architecture.*vis/.test(msg)) return 'Docs / Admin';
   if (/google ads|bidding|cpc|ppc|gbp|analytics|ga4|conversion.*crash|tracking.*broke/.test(msg)) return 'Marketing';
   if (/skill|memory|backup|repo cleanup|gitignore|\.env|eval.dashboard|training.module|dashboard|weekly.hub|vercel/.test(msg)) return 'Tools / Setup';
-  return 'Other';
+  // Catch-all repos (backup / framework) with no initiative keyword = framework/session work,
+  // NOT a mysterious "Other". Genuine misc from a dedicated repo still falls to 'Other'.
+  return isCatchAll ? 'WAT Framework / Ops' : 'Other';
 }
 
 // --- Impact Scoring ---
@@ -325,8 +362,10 @@ function enrichCommits(nodes) {
       filesChanged: n.changedFilesIfAvailable || 0,
       authorName: n.author.name,
       authorLogin: n.author.user?.login || null,
+      sourceRepo: n._sourceRepo || null,
       category,
-      project: getProject(n.message.split('\n')[0]),
+      // Use the FULL message + source repo — the repo is the most reliable initiative signal.
+      project: getProject(n.message, n._sourceRepo),
     };
     const scored = scoreCommit(commit);
     commit.impactScore = scored.impactScore;
