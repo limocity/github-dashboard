@@ -73,9 +73,19 @@ function categorizeCommit(message) {
   return 'other';
 }
 
-// Catch-all repos that hold many initiatives at once (a person's framework/backup repo);
-// for these the commit MESSAGE is the only initiative signal, not the repo.
-const CATCH_ALL_REPOS = ['wat-backup', 'winston-ai-limo-assistant'];
+// Catch-all repos that hold many initiatives at once; for these the commit MESSAGE is the
+// initiative signal, not the repo. pay-limocity is here because Thomas does Winston/James/
+// n8n/fixes all inside it (only Steve's commits there are payment-focused), so forcing it
+// to "Payments" by repo wrongly lumps all of Thomas's work together.
+const CATCH_ALL_REPOS = ['wat-backup', 'winston-ai-limo-assistant', 'pay-limocity'];
+
+// Per-repo fallback label when a catch-all commit matches no initiative keyword.
+function catchAllFallback(repo) {
+  const r = (repo || '').toLowerCase();
+  if (r.includes('pay-limocity')) return 'Payments / Checkout';
+  if (r.includes('winston-ai-limo-assistant')) return 'Winston (Thomas)';
+  return 'WAT Framework / Ops'; // the backup repo / framework session work
+}
 
 // The source REPO is the most reliable initiative signal for dedicated repos — far better
 // than regexing the commit message. Returns a project label or null (fall through to msg).
@@ -85,7 +95,7 @@ function projectFromRepo(repo) {
   if (r.includes('winston-voice')) return 'Winston Voice';
   if (r.includes('winston-master')) return 'Winston SOT';
   if (r.includes('communication-center') || r.includes('email-preview')) return 'Communication Center';
-  if (r.includes('pay-limocity') || r.includes('affiliate-review')) return 'Payments / Checkout';
+  if (r.includes('affiliate-review')) return 'Payments / Checkout';
   if (r.includes('james')) return 'James';
   if (r.includes('fleet-manager')) return 'Fleet Manager';
   if (r.includes('quote-algorithm')) return 'Quote Engine';
@@ -132,9 +142,9 @@ function getProject(message, repo) {
   if (/doc sweep|session log|worklog|briefing|update docs|session \d{4}|system map|cleanup|stale|design doc|onboarding.*guide|architecture.*vis/.test(msg)) return 'Docs / Admin';
   if (/google ads|bidding|cpc|ppc|gbp|analytics|ga4|conversion.*crash|tracking.*broke/.test(msg)) return 'Marketing';
   if (/skill|memory|backup|repo cleanup|gitignore|\.env|eval.dashboard|training.module|dashboard|weekly.hub|vercel/.test(msg)) return 'Tools / Setup';
-  // Catch-all repos (backup / framework) with no initiative keyword = framework/session work,
-  // NOT a mysterious "Other". Genuine misc from a dedicated repo still falls to 'Other'.
-  return isCatchAll ? 'WAT Framework / Ops' : 'Other';
+  // Catch-all repos with no initiative keyword get a sensible per-repo label (not a
+  // mysterious "Other"). Genuine misc from a dedicated repo still falls to 'Other'.
+  return isCatchAll ? catchAllFallback(repo) : 'Other';
 }
 
 // --- Impact Scoring ---
