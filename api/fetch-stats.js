@@ -128,9 +128,10 @@ function sizeMultiplierWide(additions, deletions) {
   if (net <= 50) return 1.0;
   if (net <= 150) return 1.4;
   if (net <= 400) return 1.8;
-  if (net <= 1000) return 2.3;
-  if (net <= 2500) return 2.8;
-  return 3.2;
+  // Cap at 2.3 above 400 lines: a focused 600-line feature and a one-time 9000-line repo
+  // import (mostly scaffolding) shouldn't be separated by boilerplate. All large commits
+  // tie at the top so the highlight's recency tiebreak surfaces the most RECENT big work.
+  return 2.3;
 }
 
 function deploymentScaleMultiplier(message) {
