@@ -324,10 +324,14 @@ function applyCustomRange() {
 function calcStats(commits) {
   const totalImpact = Math.round(commits.reduce((s, c) => s + c.impactScore, 0) * 10) / 10;
   const avgImpact = commits.length > 0 ? Math.round((totalImpact / commits.length) * 10) / 10 : 0;
+  // Highlight = biggest commit in the window. Rank by rawScore (uncapped) so a genuinely
+  // huge commit beats a medium one that merely also hit the display cap of 10; tiebreak by
+  // most recent. Falls back to impactScore for older cached data without rawScore.
+  const rank = c => (c.rawScore != null ? c.rawScore : c.impactScore);
   const topCommit = commits.reduce((best, c) => {
     if (!best) return c;
-    if (c.impactScore > best.impactScore) return c;
-    if (c.impactScore === best.impactScore && new Date(c.committedDate) > new Date(best.committedDate)) return c;
+    if (rank(c) > rank(best)) return c;
+    if (rank(c) === rank(best) && new Date(c.committedDate) > new Date(best.committedDate)) return c;
     return best;
   }, null);
   const totalChurn = commits.reduce((s, c) => s + c.additions + c.deletions, 0);
@@ -562,7 +566,7 @@ function clusterByProject(commits) {
   return Object.entries(groups)
     .map(([proj, items]) => {
       const totalPts = Math.round(items.reduce((s, c) => s + c.impactScore, 0) * 10) / 10;
-      const topCommit = items.reduce((best, c) => (!best || c.impactScore > best.impactScore) ? c : best, null);
+      const topCommit = items.reduce((best, c) => (!best || (c.rawScore != null ? c.rawScore : c.impactScore) > (best.rawScore != null ? best.rawScore : best.impactScore)) ? c : best, null);
       const catCounts = {};
       for (const c of items) catCounts[c.category] = (catCounts[c.category] || 0) + 1;
       const CAT_LABELS = { feature: 'feature', bugfix: 'bug fix', deploy: 'deploy', refactor: 'refactor', ops: 'ops', test: 'test', infra: 'infra', docs: 'doc', design: 'design', other: 'other' };

@@ -63,8 +63,11 @@ function categorizeCommit(message) {
   if (/backup|migration\s*\d|repo cleanup|gitignore/.test(msg)) return 'infra';
   if (/doc sweep|session log|worklog|briefing|update docs|session \d{4}/.test(msg)) return 'docs';
   if (/design doc|proposal|strategy|audit report|architecture/.test(msg)) return 'design';
-  if (/rewrite|redesign|rename|convert|rebuild|switch.*from.*to|cleanup/.test(msg)) return 'refactor';
-  if (/^(add|build|create|wire|implement)\b/.test(first)) return 'feature';
+  if (/rewrite|redesign|rename|convert|rebuild|overhaul|rework|refactor|migrate|switch.*from.*to|cleanup/.test(msg)) return 'refactor';
+  // Feature verbs — broadened so significant work isn't dumped into 'other' just because
+  // the message doesn't start with add/build. "Initial:", "ship", "wire up", "integrate",
+  // "repoint", "enable", "set up", etc. all signal real feature work.
+  if (/^(add|build|built|create|created|wire|wired|implement|ship|shipped|introduce|integrate|integrated|launch|enable|enabled|set ?up|repoint|repointed|hook ?up|connect|connected|initial|init)\b/.test(first)) return 'feature';
   if (/n8n|workflow|google ads|gbp|crm|zoho/.test(msg)) return 'ops';
   return 'other';
 }
@@ -103,6 +106,8 @@ const BASE_SCORES = {
   design: 4, test: 4, infra: 3, docs: 2, other: 3,
 };
 
+// Tight multiplier (0.5–1.4) for the per-commit display score + impact-point totals —
+// keeps any single commit bounded so totals stay meaningful.
 function sizeMultiplier(additions, deletions) {
   const net = additions + deletions;
   if (net === 0) return 0.5;
@@ -111,6 +116,21 @@ function sizeMultiplier(additions, deletions) {
   if (net <= 200) return 1.2;
   if (net <= 500) return 1.3;
   return 1.4;
+}
+
+// Wide multiplier (0.4–3.2) used ONLY for the uncapped rawScore that ranks the
+// "highlight of the week" — so a genuinely huge commit beats a medium one that also
+// capped at 10. Size is a more reliable impact signal than the commit-message verb.
+function sizeMultiplierWide(additions, deletions) {
+  const net = additions + deletions;
+  if (net === 0) return 0.4;
+  if (net <= 10) return 0.7;
+  if (net <= 50) return 1.0;
+  if (net <= 150) return 1.4;
+  if (net <= 400) return 1.8;
+  if (net <= 1000) return 2.3;
+  if (net <= 2500) return 2.8;
+  return 3.2;
 }
 
 function deploymentScaleMultiplier(message) {
@@ -141,10 +161,15 @@ function deploymentScaleMultiplier(message) {
 
 function scoreCommit(commit) {
   const base = BASE_SCORES[commit.category] || 3;
-  const size = sizeMultiplier(commit.additions, commit.deletions);
   const deployScale = deploymentScaleMultiplier(commit.message || commit.fullMessage || '');
-  const raw = base * size * deployScale;
-  return Math.round(Math.min(raw, 10) * 10) / 10;
+  // impactScore = capped 0–10 (tight size mult) for display + totals.
+  const display = base * sizeMultiplier(commit.additions, commit.deletions) * deployScale;
+  // rawScore = uncapped (wide size mult) for ranking the highlight only.
+  const raw = base * sizeMultiplierWide(commit.additions, commit.deletions) * deployScale;
+  return {
+    impactScore: Math.round(Math.min(display, 10) * 10) / 10,
+    rawScore: Math.round(raw * 10) / 10,
+  };
 }
 
 // --- Synergy Detection ---
@@ -301,7 +326,9 @@ function enrichCommits(nodes) {
       category,
       project: getProject(n.message.split('\n')[0]),
     };
-    commit.impactScore = scoreCommit(commit);
+    const scored = scoreCommit(commit);
+    commit.impactScore = scored.impactScore;
+    commit.rawScore = scored.rawScore;
     return commit;
   });
 }
