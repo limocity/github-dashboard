@@ -44,6 +44,7 @@ const TEAM_MEMBERS = [
 // Repos where both Steve and Thomas contribute — split commits by authorLogin
 const SHARED_REPOS = [
   { owner: 'limocity', repo: 'pay-limocity', defaultOwner: 'thomas' },
+  { owner: 'limocity', repo: 'limocity-crons', defaultOwner: 'steve' },
 ];
 
 // --- Categorization ---
