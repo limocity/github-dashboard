@@ -288,7 +288,24 @@ const CAT_COLORS = {
 async function fetchData() {
   const res = await fetch('/api/fetch-stats?t=' + Date.now(), { cache: 'no-store' });
   if (!res.ok) throw new Error(`API error: ${res.status}`);
-  return res.json();
+  const data = await res.json();
+  // Merge accurately-dated n8n workflow work (precomputed by tools/compute_n8n_work.py,
+  // dated by REAL content changes so date windows stay correct). Each entry is a
+  // commit-shaped object credited to its builder + initiative.
+  try {
+    const n8nRes = await fetch('/n8n-work.json?t=' + Date.now(), { cache: 'no-store' });
+    if (n8nRes.ok) {
+      const { entries } = await n8nRes.json();
+      for (const e of (entries || [])) {
+        const who = e.owner === 'thomas' ? 'thomas' : 'steve';
+        if (data[who] && Array.isArray(data[who].commits)) {
+          data[who].commits.push(e);
+          data[who].totalCommits = (data[who].totalCommits || 0) + 1;
+        }
+      }
+    }
+  } catch { /* n8n work is additive; ignore if the file is missing */ }
+  return data;
 }
 
 // --- Date Filtering ---
