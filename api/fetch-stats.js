@@ -126,9 +126,11 @@ function getProject(message, repo) {
   // Payments / Checkout — split out from James (the Stripe/checkout/deposit/vault work is its
   // own initiative; James = the post-sale AGENT). Check payments BEFORE James.
   if (/payment|checkout|stripe|deposit|pay.?link|pay-limocity|card.?vault|\bcvc\b|affiliate.?send|\bpan\b|saq|pci/.test(msg)) return 'Payments / Checkout';
-  if (/\bjames\b|post.?sale|fulfillment|handoff/.test(msg)) return 'James';
-  // Winston Voice — broadened to catch the warm-transfer/reclaim/bridge/media-stream work.
-  if (/elevenlabs|winston.?voice|voice.*(agent|tool|router|prompt|tracking|call|bridge|reclaim|transfer)|voice_calls|post.call.handler|media.?stream|warm.?transfer|reclaim|whisper|take.?message/.test(msg)) return 'Winston Voice';
+  // Winston Voice BEFORE James — "handoff"/"warm transfer"/"reclaim" are Winston-voice work,
+  // not the James agent (this was mis-bucketing the warm-transfer commits into James).
+  if (/elevenlabs|winston.?voice|voice.*(agent|tool|router|prompt|tracking|call|bridge|reclaim|transfer)|voice_calls|post.call.handler|media.?stream|warm.?transfer|hand.?off|reclaim|whisper|take.?message|gate e\b/.test(msg)) return 'Winston Voice';
+  // James = the post-sale AGENT specifically (its name or post-sale work), not "handoff".
+  if (/\bjames\b|post.?sale/.test(msg)) return 'James';
   if (/winston.*(sot|source of truth|system prompt|persona|coaching|instruction|guardrail|governance)/.test(msg)) return 'Winston SOT';
   if (/winston|bug\s*\d+|e2e test|verification.*checklist|round\s*\d+/.test(msg)) return 'Winston Thomas';
   if (/seo|json.ld|schema.*page|\bfaq\b|suburb|meta.title|breadcrumb|divi|wordpress|wp_|wpcode|yoast|page.*builder|wp.rocket|\bcta\b|hero.*section/.test(msg)) return 'Website / SEO';
