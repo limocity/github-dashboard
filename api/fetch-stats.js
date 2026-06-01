@@ -363,28 +363,6 @@ async function fetchAllCommits(token, owner, repo) {
 
 function enrichCommits(nodes) {
   return nodes.map(n => {
-    // n8n work entries (one per workflow per real edit-day) — pre-tagged project/owner.
-    if (n._n8n) {
-      const commit = {
-        sha: 'n8n',
-        message: n.message,
-        fullMessage: n.message,
-        committedDate: n.committedDate,
-        additions: n.additions,
-        deletions: n.deletions,
-        filesChanged: 1,
-        authorName: n.author.name,
-        authorLogin: n.author.user?.login || null,
-        sourceRepo: 'n8n',
-        category: 'ops',
-        project: n._project,
-        isN8n: true,
-      };
-      const scored = scoreCommit(commit);
-      commit.impactScore = scored.impactScore;
-      commit.rawScore = scored.rawScore;
-      return commit;
-    }
     const category = categorizeCommit(n.message);
     const commit = {
       sha: n.oid.slice(0, 7),
@@ -406,88 +384,6 @@ function enrichCommits(nodes) {
     commit.rawScore = scored.rawScore;
     return commit;
   });
-}
-
-// --- n8n workflow work (credited by builder, per Steve's ownership map 2026-05-31) ---
-// n8n doesn't record who edited a workflow, so we attribute each workflow to its builder
-// explicitly. Work is detected from the backup-repo snapshot history: one entry per workflow
-// per real edit-DAY (the day's largest diff), so a week of quote-engine work shows up and
-// counts under the right person + initiative — work that creates ZERO git commits otherwise.
-const WAT_REPO = { owner: 'limocity', repo: 'limocity-wat-backup' };
-const N8N_OWNERSHIP = {
-  'generate-quote':         { owner: 'steve',  project: 'Quote Engine',         name: 'Generate Quote' },
-  'quote-follow-up':        { owner: 'steve',  project: 'Quote Engine',         name: 'Quote Follow-up' },
-  'design-email':           { owner: 'steve',  project: 'Quote Engine',         name: 'Design Email' },
-  'winston-voice':          { owner: 'steve',  project: 'Winston Voice',        name: 'Winston Voice' },
-  'voice-post-call-handler':{ owner: 'steve',  project: 'Winston Voice',        name: 'Voice Post-Call Handler' },
-  'send-call-tool':         { owner: 'steve',  project: 'Winston Voice',        name: 'Send Call Tool' },
-  'winston-master':         { owner: 'steve',  project: 'Winston SOT',          name: 'Winston Master (SOT)' },
-  'james-master':           { owner: 'steve',  project: 'James',                name: 'James Master' },
-  'follow-up-orchestrator': { owner: 'steve',  project: 'n8n / Automation',     name: 'Follow-up Orchestrator' },
-  'send-email-tool':        { owner: 'thomas', project: 'Communication Center', name: 'Send Email Tool' },
-  'send-sms-tool':          { owner: 'thomas', project: 'Communication Center', name: 'Send SMS Tool' },
-  'email-reply-monitor':    { owner: 'thomas', project: 'Communication Center', name: 'Email Reply Monitor' },
-  'inbound-sms-monitor':    { owner: 'thomas', project: 'Communication Center', name: 'Inbound SMS Monitor' },
-  'reply-sender':           { owner: 'thomas', project: 'Communication Center', name: 'Reply Sender' },
-  'lead-follow-up':         { owner: 'thomas', project: 'n8n / Automation',     name: 'Lead Follow-up' },
-};
-const N8N_MIN_NET = 20; // ignore trivial/volatility-only days (timestamp/version churn)
-
-// Days a given workflow snapshot actually changed, with that day's largest diff.
-async function fetchWorkflowChangeDays(token, slug) {
-  const days = new Map(); // 'YYYY-MM-DD' -> { net, dt }
-  let cursor = null, hasNext = true, guard = 0;
-  while (hasNext && guard++ < 20) {
-    const after = cursor ? `, after: "${cursor}"` : '';
-    const query = `{ repository(owner:"${WAT_REPO.owner}", name:"${WAT_REPO.repo}") {
-      object(expression:"HEAD") { ... on Commit {
-        history(first:100${after}, path:"n8n-snapshots/${slug}") {
-          nodes { committedDate additions deletions }
-          pageInfo { hasNextPage endCursor } } } } } }`;
-    const res = await fetch('https://api.github.com/graphql', {
-      method: 'POST',
-      headers: { Authorization: `bearer ${token}`, 'Content-Type': 'application/json', 'User-Agent': 'github-dashboard' },
-      body: JSON.stringify({ query }),
-    });
-    if (!res.ok) break;
-    const json = await res.json();
-    const h = json?.data?.repository?.object?.history;
-    if (!h) break;
-    for (const n of h.nodes) {
-      const day = n.committedDate.slice(0, 10);
-      const net = (n.additions || 0) + (n.deletions || 0);
-      const cur = days.get(day);
-      if (!cur || net > cur.net) days.set(day, { net, dt: n.committedDate });
-    }
-    hasNext = h.pageInfo.hasNextPage;
-    cursor = h.pageInfo.endCursor;
-  }
-  return days;
-}
-
-async function fetchN8nWorkNodes(token) {
-  const slugs = Object.keys(N8N_OWNERSHIP);
-  const perWf = await Promise.all(slugs.map(s => fetchWorkflowChangeDays(token, s).then(days => ({ s, days })).catch(() => ({ s, days: new Map() }))));
-  const nodes = [];
-  for (const { s, days } of perWf) {
-    const meta = N8N_OWNERSHIP[s];
-    for (const [day, info] of days) {
-      if (info.net < N8N_MIN_NET) continue;
-      nodes.push({
-        oid: `n8n:${s}:${day}`,
-        message: `n8n: ${meta.name} — workflow built/updated`,
-        committedDate: info.dt,
-        additions: info.net,
-        deletions: 0,
-        changedFilesIfAvailable: 1,
-        author: { name: meta.owner === 'steve' ? 'Steve Astin' : 'Thomas Clark', user: { login: meta.owner === 'steve' ? 'Sastin1' : 'thomaslc214' } },
-        _n8n: true,
-        _project: meta.project,
-        _owner: meta.owner,
-      });
-    }
-  }
-  return nodes;
 }
 
 // --- WordPress Metrics ---
@@ -562,9 +458,6 @@ export default async function handler(req, res) {
       sharedNodes.push(...nodes);
     }
 
-    // n8n workflow work (credited by builder per the ownership map), keyed by person.
-    const n8nNodes = await fetchN8nWorkNodes(token);
-
     const results = {};
 
     for (const person of TEAM_MEMBERS) {
@@ -596,14 +489,6 @@ export default async function handler(req, res) {
         const isUnknown = !login || !knownLogins.has(login);
         const isDefault = isUnknown && !isAuthor && person.key === n._defaultOwner;
         if (isAuthor || isDefault) {
-          seen.add(n.oid);
-          allNodes.push(n);
-        }
-      }
-
-      // Inject this person's n8n workflow work (per the ownership map).
-      for (const n of n8nNodes) {
-        if (n._owner === person.key && !seen.has(n.oid)) {
           seen.add(n.oid);
           allNodes.push(n);
         }
