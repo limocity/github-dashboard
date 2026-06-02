@@ -1318,8 +1318,8 @@
       "sha": "n8n",
       "message": "n8n: Winston Voice \u2014 workflow built/updated",
       "fullMessage": "n8n: Winston Voice \u2014 workflow built/updated",
-      "committedDate": "2026-06-01T09:01:06-05:00",
-      "additions": 10,
+      "committedDate": "2026-06-01T19:48:31-05:00",
+      "additions": 15,
       "deletions": 0,
       "filesChanged": 1,
       "authorName": "Steve Astin",
@@ -1327,8 +1327,8 @@
       "sourceRepo": "n8n",
       "category": "ops",
       "project": "Winston Voice",
-      "impactScore": 4.0,
-      "rawScore": 3.5,
+      "impactScore": 5.0,
+      "rawScore": 5.0,
       "isN8n": true,
       "owner": "steve"
     }
