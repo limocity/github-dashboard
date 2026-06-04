@@ -1,0 +1,28 @@
+{
+  "hooks": {
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python .claude/auto_checkpoint.py",
+            "timeout": 120,
+            "statusMessage": "WIP checkpoint…"
+          }
+        ]
+      }
+    ],
+    "PreCompact": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python .claude/auto_checkpoint.py --force",
+            "timeout": 120,
+            "statusMessage": "Saving work before compaction…"
+          }
+        ]
+      }
+    ]
+  }
+}
