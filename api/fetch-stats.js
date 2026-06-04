@@ -16,10 +16,11 @@ const TEAM_MEMBERS = [
       { owner: 'limocity', repo: 'james-email-relay' },
       { owner: 'limocity', repo: 'affiliate-review' },
       { owner: 'limocity', repo: 'email-preview' },
-      // Added 2026-05-28 — Communication Center (renamed from limocity-ops same day,
-      // so the GitHub repo URL is communication-center). Was missing from this list
-      // and 46+ commits of Steve's last-2-day work were invisible to the dashboard.
-      { owner: 'limocity', repo: 'communication-center' },
+      // Command Center — the ops/comms supervisor app (local folder limocity-ops,
+      // deploys command-center.limocity.com). GitHub repo renamed
+      // communication-center -> command-center on 2026-06-04 (GitHub redirects the
+      // old URL, but the API returns the new name, so track it here).
+      { owner: 'limocity', repo: 'command-center' },
       // Added 2026-05-31 (cont.32) — Twilio Media Streams <-> ElevenLabs bridge for the
       // Winston no-answer reclaim (interactive real-voice). Deployed to Fly.io.
       { owner: 'limocity', repo: 'winston-voice-bridge' },
@@ -94,7 +95,7 @@ function projectFromRepo(repo) {
   if (!r || CATCH_ALL_REPOS.some(x => r.includes(x))) return null;
   if (r.includes('winston-voice')) return 'Winston Voice';
   if (r.includes('winston-master')) return 'Winston SOT';
-  if (r.includes('communication-center') || r.includes('email-preview')) return 'Communication Center';
+  if (r.includes('command-center') || r.includes('email-preview')) return 'Command Center';
   if (r.includes('affiliate-review')) return 'Payments / Checkout';
   if (r.includes('james')) return 'James';
   if (r.includes('fleet-manager')) return 'Fleet Manager';
