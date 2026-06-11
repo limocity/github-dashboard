@@ -1547,6 +1547,24 @@
       "rawScore": 5.0,
       "isN8n": true,
       "owner": "steve"
+    },
+    {
+      "sha": "n8n",
+      "message": "n8n: Winston Voice \u2014 workflow built/updated",
+      "fullMessage": "n8n: Winston Voice \u2014 workflow built/updated",
+      "committedDate": "2026-06-11T07:54:58-05:00",
+      "additions": 133,
+      "deletions": 0,
+      "filesChanged": 1,
+      "authorName": "Steve Astin",
+      "authorLogin": "Sastin1",
+      "sourceRepo": "n8n",
+      "category": "ops",
+      "project": "Winston Voice",
+      "impactScore": 6.0,
+      "rawScore": 7.0,
+      "isN8n": true,
+      "owner": "steve"
     }
   ]
 }
