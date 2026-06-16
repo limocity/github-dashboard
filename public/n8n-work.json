@@ -1673,6 +1673,24 @@
       "rawScore": 7.0,
       "isN8n": true,
       "owner": "steve"
+    },
+    {
+      "sha": "n8n",
+      "message": "n8n: Generate Quote \u2014 workflow built/updated",
+      "fullMessage": "n8n: Generate Quote \u2014 workflow built/updated",
+      "committedDate": "2026-06-16T14:40:09-05:00",
+      "additions": 31,
+      "deletions": 0,
+      "filesChanged": 1,
+      "authorName": "Steve Astin",
+      "authorLogin": "Sastin1",
+      "sourceRepo": "n8n",
+      "category": "ops",
+      "project": "Quote Engine",
+      "impactScore": 5.0,
+      "rawScore": 5.0,
+      "isN8n": true,
+      "owner": "steve"
     }
   ]
 }
