@@ -1799,6 +1799,24 @@
       "rawScore": 5.0,
       "isN8n": true,
       "owner": "steve"
+    },
+    {
+      "sha": "n8n",
+      "message": "n8n: Email Reply Monitor \u2014 workflow built/updated",
+      "fullMessage": "n8n: Email Reply Monitor \u2014 workflow built/updated",
+      "committedDate": "2026-06-25T08:43:59-05:00",
+      "additions": 467,
+      "deletions": 0,
+      "filesChanged": 1,
+      "authorName": "Thomas Clark",
+      "authorLogin": "thomaslc214",
+      "sourceRepo": "n8n",
+      "category": "ops",
+      "project": "Communication Center",
+      "impactScore": 6.5,
+      "rawScore": 11.5,
+      "isN8n": true,
+      "owner": "thomas"
     }
   ]
 }
