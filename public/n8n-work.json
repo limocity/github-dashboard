@@ -1817,6 +1817,24 @@
       "rawScore": 11.5,
       "isN8n": true,
       "owner": "thomas"
+    },
+    {
+      "sha": "n8n",
+      "message": "n8n: Design Email \u2014 workflow built/updated",
+      "fullMessage": "n8n: Design Email \u2014 workflow built/updated",
+      "committedDate": "2026-06-25T17:02:35-05:00",
+      "additions": 97,
+      "deletions": 0,
+      "filesChanged": 1,
+      "authorName": "Steve Astin",
+      "authorLogin": "Sastin1",
+      "sourceRepo": "n8n",
+      "category": "ops",
+      "project": "Quote Engine",
+      "impactScore": 6.0,
+      "rawScore": 7.0,
+      "isN8n": true,
+      "owner": "steve"
     }
   ]
 }
