@@ -1835,6 +1835,42 @@
       "rawScore": 7.0,
       "isN8n": true,
       "owner": "steve"
+    },
+    {
+      "sha": "n8n",
+      "message": "n8n: Winston Master (SOT) \u2014 workflow built/updated",
+      "fullMessage": "n8n: Winston Master (SOT) \u2014 workflow built/updated",
+      "committedDate": "2026-06-26T14:15:50-05:00",
+      "additions": 131,
+      "deletions": 0,
+      "filesChanged": 1,
+      "authorName": "Steve Astin",
+      "authorLogin": "Sastin1",
+      "sourceRepo": "n8n",
+      "category": "ops",
+      "project": "Winston SOT",
+      "impactScore": 6.0,
+      "rawScore": 7.0,
+      "isN8n": true,
+      "owner": "steve"
+    },
+    {
+      "sha": "n8n",
+      "message": "n8n: James Master \u2014 workflow built/updated",
+      "fullMessage": "n8n: James Master \u2014 workflow built/updated",
+      "committedDate": "2026-06-26T14:15:50-05:00",
+      "additions": 136,
+      "deletions": 0,
+      "filesChanged": 1,
+      "authorName": "Steve Astin",
+      "authorLogin": "Sastin1",
+      "sourceRepo": "n8n",
+      "category": "ops",
+      "project": "James",
+      "impactScore": 6.0,
+      "rawScore": 7.0,
+      "isN8n": true,
+      "owner": "steve"
     }
   ]
 }
